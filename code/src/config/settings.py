@@ -6,8 +6,22 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # LLM
+    llm_provider: str = "openai"
+    llm_model: str = "gpt-4o-mini"
+    llm_api_key: str = ""
+    llm_base_url: str = ""
+
+    # Backward compatibility: fallback to old env vars if new ones are not set
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
+
+    @property
+    def resolved_llm_api_key(self) -> str:
+        return self.llm_api_key or self.openai_api_key
+
+    @property
+    def resolved_llm_model(self) -> str:
+        return self.llm_model or self.openai_model
 
     # PostgreSQL
     postgres_host: str = "localhost"

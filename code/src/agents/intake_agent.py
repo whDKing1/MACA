@@ -18,12 +18,7 @@ import structlog
 # langchain_core 是 LangChain 的核心消息类型。
 # HumanMessage 代表用户说的话，SystemMessage 代表给模型的系统指令。
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-
-# 从上层配置模块导入设置函数 get_settings。
-# 通常 get_settings 会读取环境变量、.env 文件等，返回一个包含
-# openai_api_key、openai_model 等属性的 Settings 对象。
-from ..config.settings import get_settings
+from ..llm.provider import get_llm_provider
 # 从上层数据模型导入 PatientInfo 类，是一个 Pydantic BaseModel，
 # 定义了患者信息的所有字段和验证规则。
 from ..models.patient import PatientInfo
@@ -98,20 +93,13 @@ def intake_agent(state) -> dict:
     # -------------------------------------------------------------------------
     # 2. 初始化 LLM（大语言模型）
     # -------------------------------------------------------------------------
-    # get_settings() 返回一个包含配置的单例对象，通常从环境变量中读取。
-    # 这样敏感信息（如 API Key）就不会硬编码在代码里。
-    settings = get_settings()
-
-    # 创建 ChatOpenAI 实例。
-    # model：要使用的模型名称，比如 "gpt-4o"、"gpt-3.5-turbo"。
-    # api_key：OpenAI API 密钥，从配置中读取。
-    # temperature：0.1 表示几乎确定的输出，适合信息提取任务，
-    #   因为我们需要严格按照 JSON 格式输出，不需要创造性。
-    llm = ChatOpenAI(
-        model=settings.openai_model,
-        api_key=settings.openai_api_key,
-        temperature=0.1,
-    )
+    # get_llm_provider() 根据环境变量 LLM_PROVIDER 自动选择对应的模型后端：
+    #   openai -> GPT 系列
+    #   deepseek -> DeepSeek 系列
+    #   qwen -> 通义千问系列
+    #   ollama -> 本地部署模型
+    # temperature=0.1 表示几乎确定的输出，适合信息提取任务。
+    llm = get_llm_provider(temperature=0.1)
 
     # -------------------------------------------------------------------------
     # 3. 构建消息列表

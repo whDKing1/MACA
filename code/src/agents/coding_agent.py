@@ -12,9 +12,7 @@ from __future__ import annotations
 import json
 import structlog
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-
-from ..config.settings import get_settings
+from ..llm.provider import get_llm_provider
 
 logger = structlog.get_logger(__name__)
 
@@ -73,12 +71,7 @@ def coding_agent(state) -> dict:
             "errors": state.errors + ["No diagnosis available for coding"],
         }
 
-    settings = get_settings()
-    llm = ChatOpenAI(
-        model=settings.openai_model,
-        api_key=settings.openai_api_key,
-        temperature=0.1,
-    )
+    llm = get_llm_provider(temperature=0.1)
 
     context = json.dumps(
         {"diagnosis": diagnosis, "treatment_plan": treatment},

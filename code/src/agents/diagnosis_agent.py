@@ -13,9 +13,7 @@ from __future__ import annotations
 import json
 import structlog
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-
-from ..config.settings import get_settings
+from ..llm.provider import get_llm_provider
 from ..graph.state import MAX_DIAGNOSIS_RETRIES
 
 logger = structlog.get_logger(__name__)
@@ -81,12 +79,7 @@ def diagnosis_agent(state) -> dict:
             "errors": state.errors + ["No patient info available for diagnosis"],
         }
 
-    settings = get_settings()
-    llm = ChatOpenAI(
-        model=settings.openai_model,
-        api_key=settings.openai_api_key,
-        temperature=0.2,
-    )
+    llm = get_llm_provider(temperature=0.2)
 
     # -------------------------------------------------------------------------
     # 3. 准备 LLM 输入
